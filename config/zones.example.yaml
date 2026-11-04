@@ -1,0 +1,21 @@
+zones:
+
+  test_strand:
+    name: Test Strand
+    controller: simulator_01
+    output: 0
+    pixel_count: 30
+
+  # Future examples:
+  #
+  # front_roof:
+  #   name: Front Roof
+  #   controller: pico_front
+  #   output: 0
+  #   pixel_count: 150
+  #
+  # porch:
+  #   name: Porch
+  #   controller: pico_front
+  #   output: 1
+  #   pixel_count: 75

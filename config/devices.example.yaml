@@ -1,0 +1,13 @@
+devices:
+
+  simulator_01:
+    name: Example Simulator
+    type: simulator
+    outputs: 1
+
+  # Future example:
+  #
+  # pico_front:
+  #   name: Front House Controller
+  #   type: pico_w
+  #   outputs: 4

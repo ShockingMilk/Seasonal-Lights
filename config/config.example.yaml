@@ -1,0 +1,11 @@
+# General Seasonal Lights configuration.
+
+application:
+  name: Seasonal Lights
+  log_level: INFO
+
+runtime:
+  frame_rate: 30
+
+power:
+  maximum_brightness: 0.50

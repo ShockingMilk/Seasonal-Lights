@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local configuration
+config/config.yaml
+config/devices.yaml
+config/zones.yaml
+
+# Local scene overrides
+config/scenes/*.local.yaml
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+data/
