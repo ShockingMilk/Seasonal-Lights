@@ -1,11 +1,13 @@
-# General Seasonal Lights configuration.
-
 application:
-  name: Seasonal Lights
-  log_level: INFO
+  name: "Seasonal Lights"
+  environment: "development"
 
 runtime:
-  frame_rate: 30
+  update_interval: 0.10
+  default_scene: "solid_warm"
 
-power:
-  maximum_brightness: 0.50
+output:
+  device: "simulator"
+
+safety:
+  maximum_brightness: 0.35

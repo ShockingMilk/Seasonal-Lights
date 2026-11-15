@@ -1,0 +1,15 @@
+name: "Warm Pulse"
+
+zones:
+  - test_zone
+
+effect:
+  type: "pulse"
+
+  color:
+    r: 255
+    g: 80
+    b: 20
+
+  brightness: 0.30
+  speed: 0.50

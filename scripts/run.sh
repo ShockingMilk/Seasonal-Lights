@@ -1,18 +1,13 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 cd "$PROJECT_ROOT"
 
-if [ ! -d ".venv" ]; then
-    echo "Virtual environment not found."
-    echo "Run:"
-    echo "  python3 -m venv .venv"
-    exit 1
+if [[ -d "$PROJECT_ROOT/.venv" ]]; then
+    source "$PROJECT_ROOT/.venv/bin/activate"
 fi
 
-source .venv/bin/activate
-
-python -m seasonal_lights.main
+seasonal-lights "$@"

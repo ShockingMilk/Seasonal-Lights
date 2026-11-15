@@ -1,5 +1,3 @@
-"""Pulsing lighting effect."""
-
 import math
 
 from seasonal_lights.effects.base import LightEffect
@@ -7,7 +5,7 @@ from seasonal_lights.models.color import Color
 
 
 class PulseEffect(LightEffect):
-    """Smoothly pulses a color between off and full brightness."""
+    """Pulses a color between off and configured brightness."""
 
     def __init__(
         self,
@@ -15,24 +13,27 @@ class PulseEffect(LightEffect):
         brightness: float = 1.0,
         speed: float = 1.0,
     ) -> None:
+        super().__init__(
+            brightness=brightness,
+            speed=speed,
+        )
+
         self.color = color
-        self.brightness = brightness
-        self.speed = speed
 
-    def render(
+    def update(
         self,
-        pixel_count: int,
         elapsed: float,
+        pixel_count: int,
     ) -> list[Color]:
-        """Render the current pulse state."""
-
         wave = (
-            math.sin(elapsed * self.speed * 2.0 * math.pi)
-            + 1.0
-        ) / 2.0
+            math.sin(elapsed * self.speed * math.tau) + 1
+        ) / 2
 
-        brightness = wave * self.brightness
+        intensity = wave * self.brightness
 
-        pixel = self.color.scaled(brightness)
+        color = self.color.scale(intensity)
 
-        return [pixel for _ in range(pixel_count)]
+        return [
+            color
+            for _ in range(pixel_count)
+        ]

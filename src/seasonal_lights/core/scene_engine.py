@@ -1,97 +1,63 @@
-"""Scene execution engine."""
-
-from seasonal_lights.core.controller import ControllerManager
-from seasonal_lights.effects import (
-    LightEffect,
-    PulseEffect,
-    RainbowEffect,
-    SolidEffect,
-)
-from seasonal_lights.enums import EffectType
-from seasonal_lights.models import SceneConfig, ZoneConfig
+from seasonal_lights.effects.base import LightEffect
+from seasonal_lights.models.scene import Scene
 
 
 class SceneEngine:
-    """Coordinates scenes, zones, effects, and controllers."""
+    """Generates pixel frames for active scenes."""
 
-    def __init__(
+    def __init__(self) -> None:
+        self.active_scene: Scene | None = None
+
+        self.active_effects: dict[
+            str,
+            LightEffect
+        ] = {}
+
+    def activate(
         self,
-        controllers: ControllerManager,
-        zones: dict[str, ZoneConfig],
+        scene: Scene,
+        effects: dict[str, LightEffect],
     ) -> None:
-        self.controllers = controllers
-        self.zones = zones
+        """Activate a scene."""
 
-    def create_effect(
+        if not scene.zones:
+            raise ValueError(
+                "A scene must contain at least one zone."
+            )
+
+        missing = set(scene.zones) - set(effects)
+
+        if missing:
+            raise ValueError(
+                f"Missing effects for zones: {missing}"
+            )
+
+        self.active_scene = scene
+        self.active_effects = effects
+
+    def update(
         self,
-        scene: SceneConfig,
-    ) -> LightEffect:
-        """Create the appropriate effect for a scene."""
-
-        config = scene.effect
-
-        match config.effect_type:
-            case EffectType.SOLID:
-                return SolidEffect(
-                    color=config.color,
-                    brightness=config.brightness,
-                )
-
-            case EffectType.PULSE:
-                return PulseEffect(
-                    color=config.color,
-                    brightness=config.brightness,
-                    speed=config.speed,
-                )
-
-            case EffectType.RAINBOW:
-                return RainbowEffect(
-                    brightness=config.brightness,
-                    speed=config.speed,
-                )
-
-            case _:
-                raise ValueError(
-                    f"Unsupported effect: {config.effect_type}"
-                )
-
-    def render_scene(
-        self,
-        scene: SceneConfig,
         elapsed: float,
-    ) -> None:
-        """Render a scene to all of its zones."""
+        zone_pixel_counts: dict[str, int],
+    ) -> dict[str, list]:
+        """Generate frames for all active zones."""
 
-        effect = self.create_effect(scene)
+        if self.active_scene is None:
+            return {}
 
-        for zone_id in scene.zones:
-            zone = self._get_zone(zone_id)
+        frames = {}
 
-            device = self.controllers.get(
-                zone.controller_id
-            )
+        for zone_id in self.active_scene.zones:
+            if zone_id not in zone_pixel_counts:
+                raise ValueError(
+                    f"Missing pixel configuration for {zone_id}."
+                )
 
-            pixels = effect.render(
-                pixel_count=zone.pixel_count,
+            effect = self.active_effects[zone_id]
+
+            frames[zone_id] = effect.update(
                 elapsed=elapsed,
+                pixel_count=zone_pixel_counts[zone_id],
             )
 
-            device.set_pixels(
-                output=zone.output,
-                pixels=pixels,
-            )
-
-            device.show(zone.output)
-
-    def _get_zone(
-        self,
-        zone_id: str,
-    ) -> ZoneConfig:
-        """Retrieve a zone by ID."""
-
-        try:
-            return self.zones[zone_id]
-        except KeyError as exc:
-            raise KeyError(
-                f"Unknown lighting zone: {zone_id}"
-            ) from exc
+        return frames

@@ -1,0 +1,10 @@
+name: "Rainbow"
+
+zones:
+  - test_zone
+
+effect:
+  type: "rainbow"
+
+  brightness: 0.20
+  speed: 0.25

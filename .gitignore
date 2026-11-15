@@ -2,7 +2,7 @@
 __pycache__/
 *.py[cod]
 *.pyo
-*.pyd
+*.egg-info/
 
 # Virtual environments
 .venv/
@@ -14,16 +14,11 @@ env/
 .coverage
 htmlcov/
 
-# Build artifacts
-build/
-dist/
-*.egg-info/
-
-# IDEs
+# IDE
 .vscode/
 .idea/
 
-# OS
+# Operating systems
 .DS_Store
 Thumbs.db
 
@@ -32,12 +27,14 @@ config/config.yaml
 config/devices.yaml
 config/zones.yaml
 
-# Local scene overrides
-config/scenes/*.local.yaml
-
 # Logs
 logs/
 *.log
 
-# Runtime data
-data/
+# Build
+build/
+dist/
+
+# Temporary files
+tmp/
+temp/

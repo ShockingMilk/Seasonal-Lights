@@ -1,0 +1,14 @@
+name: "Warm White"
+
+zones:
+  - test_zone
+
+effect:
+  type: "solid"
+
+  color:
+    r: 255
+    g: 140
+    b: 50
+
+  brightness: 0.25

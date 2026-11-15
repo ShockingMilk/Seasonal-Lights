@@ -1,5 +1,3 @@
-"""Rainbow lighting effect."""
-
 import colorsys
 
 from seasonal_lights.effects.base import LightEffect
@@ -7,32 +5,24 @@ from seasonal_lights.models.color import Color
 
 
 class RainbowEffect(LightEffect):
-    """Displays a moving rainbow across the strand."""
+    """Generates an animated rainbow across the pixels."""
 
-    def __init__(
+    def update(
         self,
-        brightness: float = 1.0,
-        speed: float = 1.0,
-    ) -> None:
-        self.brightness = brightness
-        self.speed = speed
-
-    def render(
-        self,
-        pixel_count: int,
         elapsed: float,
+        pixel_count: int,
     ) -> list[Color]:
-        """Render the current rainbow frame."""
+        pixels = []
 
-        pixels: list[Color] = []
+        if pixel_count <= 0:
+            return pixels
+
+        movement = elapsed * self.speed
 
         for index in range(pixel_count):
-            position = index / max(pixel_count, 1)
+            position = index / pixel_count
 
-            hue = (
-                position
-                + elapsed * self.speed * 0.1
-            ) % 1.0
+            hue = (position + movement) % 1.0
 
             red, green, blue = colorsys.hsv_to_rgb(
                 hue,
@@ -42,9 +32,9 @@ class RainbowEffect(LightEffect):
 
             pixels.append(
                 Color(
-                    round(red * 255),
-                    round(green * 255),
-                    round(blue * 255),
+                    red=round(red * 255),
+                    green=round(green * 255),
+                    blue=round(blue * 255),
                 )
             )
 

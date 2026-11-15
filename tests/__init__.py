@@ -1,0 +1,1 @@
+"""Seasonal Lights test suite."""

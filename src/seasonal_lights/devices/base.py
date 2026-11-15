@@ -1,20 +1,14 @@
-"""Base interface for lighting devices."""
-
 from abc import ABC, abstractmethod
 
 from seasonal_lights.models.color import Color
 
 
 class LightingDevice(ABC):
-    """
-    Abstract interface for a lighting controller.
+    """Common interface for all lighting devices."""
 
-    Physical devices such as Pico W controllers should implement this
-    interface without requiring changes to the scene engine.
-    """
-
-    def __init__(self, device_id: str) -> None:
-        self.device_id = device_id
+    @abstractmethod
+    def initialize(self) -> None:
+        """Initialize the device."""
 
     @abstractmethod
     def set_pixels(
@@ -22,16 +16,12 @@ class LightingDevice(ABC):
         output: int,
         pixels: list[Color],
     ) -> None:
-        """Set the complete pixel buffer for an output."""
+        """Send pixel data to an output."""
 
     @abstractmethod
     def clear(self, output: int) -> None:
-        """Turn all pixels on an output off."""
+        """Turn off an output."""
 
     @abstractmethod
-    def show(self, output: int) -> None:
-        """Commit the current pixel buffer to the physical device."""
-
-    @abstractmethod
-    def close(self) -> None:
-        """Release resources used by the device."""
+    def shutdown(self) -> None:
+        """Safely shut down the device."""

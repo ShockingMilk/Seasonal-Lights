@@ -1,27 +1,26 @@
-"""Solid color lighting effect."""
-
 from seasonal_lights.effects.base import LightEffect
 from seasonal_lights.models.color import Color
 
 
 class SolidEffect(LightEffect):
-    """Displays one solid color."""
+    """Displays a single solid color."""
 
     def __init__(
         self,
         color: Color,
         brightness: float = 1.0,
     ) -> None:
+        super().__init__(brightness=brightness)
         self.color = color
-        self.brightness = brightness
 
-    def render(
+    def update(
         self,
-        pixel_count: int,
         elapsed: float,
+        pixel_count: int,
     ) -> list[Color]:
-        """Render the solid color."""
+        color = self.color.scale(self.brightness)
 
-        pixel = self.color.scaled(self.brightness)
-
-        return [pixel for _ in range(pixel_count)]
+        return [
+            color
+            for _ in range(pixel_count)
+        ]

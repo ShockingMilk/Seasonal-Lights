@@ -1,11 +1,9 @@
-"""Device-related enumerations."""
-
 from enum import StrEnum
 
 
 class DeviceType(StrEnum):
-    """Types of lighting controllers."""
+    """Supported lighting device types."""
 
     SIMULATOR = "simulator"
-    RASPBERRY_PI = "raspberry_pi"
-    PICO_W = "pico_w"
+    LOCAL = "local"
+    PICO = "pico"

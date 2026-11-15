@@ -1,74 +1,110 @@
-"""Simulator lighting device."""
-
 from seasonal_lights.devices.base import LightingDevice
 from seasonal_lights.models.color import Color
 
 
 class SimulatorDevice(LightingDevice):
-    """
-    Simulates an LED controller.
+    """Simulates an addressable LED controller."""
 
-    The simulator intentionally implements the same interface as a
-    future physical controller.
-    """
+    def __init__(
+        self,
+        name: str,
+        outputs: int,
+        pixels_per_output: int,
+    ) -> None:
+        if outputs < 1 or pixels_per_output < 1:
+            raise ValueError(
+                "Outputs and pixel count must be positive."
+            )
 
-    def __init__(self, device_id: str) -> None:
-        super().__init__(device_id)
+        self.name = name
+        self.outputs = outputs
+        self.pixels_per_output = pixels_per_output
 
-        self.outputs: dict[int, list[Color]] = {}
+        self.pixels: dict[int, list[Color]] = {
+            output: [
+                Color.black()
+                for _ in range(pixels_per_output)
+            ]
+            for output in range(outputs)
+        }
+
+        self.initialized = False
+
+    def initialize(self) -> None:
+        self.initialized = True
+
+        print(
+            f"[SIMULATOR] Initialized: {self.name}"
+        )
 
     def set_pixels(
         self,
         output: int,
         pixels: list[Color],
     ) -> None:
-        """Store a pixel buffer."""
+        self._validate_output(output)
 
-        self.outputs[output] = list(pixels)
+        if not self.initialized:
+            raise RuntimeError(
+                "Simulator has not been initialized."
+            )
+
+        if len(pixels) != self.pixels_per_output:
+            raise ValueError(
+                f"Expected {self.pixels_per_output} pixels; "
+                f"received {len(pixels)}."
+            )
+
+        self.pixels[output] = list(pixels)
+
+        self._display(output)
 
     def clear(self, output: int) -> None:
-        """Clear an output."""
+        self._validate_output(output)
 
-        self.outputs[output] = [
-            Color(0, 0, 0)
-            for _ in self.outputs.get(output, [])
+        self.pixels[output] = [
+            Color.black()
+            for _ in range(self.pixels_per_output)
         ]
 
-    def show(self, output: int) -> None:
-        """Display the current simulated output."""
+        self._display(output)
 
-        pixels = self.outputs.get(output, [])
+    def shutdown(self) -> None:
+        for output in self.pixels:
+            self.clear(output)
 
-        if not pixels:
-            print(f"[{self.device_id}:output-{output}] OFF")
-            return
+        self.initialized = False
 
-        preview = "".join(
-            self._color_to_character(pixel)
-            for pixel in pixels
-        )
+        print("[SIMULATOR] Shutdown.")
+
+    def _validate_output(self, output: int) -> None:
+        if output not in self.pixels:
+            raise ValueError(
+                f"Invalid simulator output: {output}"
+            )
+
+    def _display(self, output: int) -> None:
+        pixels = self.pixels[output]
+
+        average = self._average_color(pixels)
 
         print(
-            f"[{self.device_id}:output-{output}] "
-            f"{preview}"
+            f"[SIMULATOR] Output {output} | "
+            f"Pixels: {len(pixels)} | "
+            f"Average RGB: {average.as_tuple()}"
         )
 
-    def close(self) -> None:
-        """Close the simulated device."""
-
-        self.outputs.clear()
-
     @staticmethod
-    def _color_to_character(color: Color) -> str:
-        """Convert an RGB color into a compact terminal representation."""
+    def _average_color(
+        pixels: list[Color],
+    ) -> Color:
+        if not pixels:
+            return Color.black()
 
-        if color.red == 0 and color.green == 0 and color.blue == 0:
-            return "."
+        count = len(pixels)
 
-        if color.red >= color.green and color.red >= color.blue:
-            return "R"
-
-        if color.green >= color.red and color.green >= color.blue:
-            return "G"
-
-        return "B"
+        return Color(
+            red=sum(pixel.red for pixel in pixels) // count,
+            green=sum(pixel.green for pixel in pixels) // count,
+            blue=sum(pixel.blue for pixel in pixels) // count,
+        )

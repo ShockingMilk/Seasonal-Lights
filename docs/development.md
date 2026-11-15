@@ -1,62 +1,79 @@
-# Development
+# Development Guide
 
-## Python Version
+## Requirements
 
-Python 3.11 or newer.
+- Python 3.11+
+- Git
+- Linux recommended
 
-## Virtual Environment
+## Initial Setup
 
-Create:
+Clone the repository:
+
+```bash
+git clone <repository-url>
+cd seasonal-lights
+```
+
+Create the environment:
 
 ```bash
 python3 -m venv .venv
-
-Activate:
-
 source .venv/bin/activate
+```
 
 Install:
 
-pip install -r requirements.txt
-pip install -e .
-Run
-python -m seasonal_lights.main
-Tests
+```bash
+pip install -e ".[dev]"
+```
+
+## Run
+
+```bash
+seasonal-lights
+```
+
+## Run Tests
+
+```bash
 pytest
-Design Rules
-Do
-Keep hardware-specific code in devices.
-Keep effects independent of hardware.
-Keep deployment configuration outside source code.
-Add new device types through the device abstraction.
-Add new effects through the effect abstraction.
-Keep enums centralized.
-Avoid
+```
 
-Do not place hardware-specific logic in the scene engine.
+## Development Principles
 
-Avoid:
+### Hardware isolation
 
-if device == "pico":
+Do not place GPIO or LED-library implementation inside:
 
-inside scene or effect code.
+- Core.
+- Effects.
+- Models.
+- Configuration utilities.
 
-Prefer:
+Hardware-specific code belongs in devices.
 
-Scene Engine
-    |
-LightingDevice
-    |
-PicoDevice
+### Configuration first
 
-This allows hardware to change without changing scenes.
+If a setting can reasonably be changed without modifying Python code, prefer configuration.
 
-Git
+### Independent effects
 
-Do not commit:
+Effects should not know:
 
-private configuration
-credentials
-local IP addresses
-generated logs
-runtime data
+- Which holiday is being celebrated.
+- Which house is being controlled.
+- Which controller is being used.
+- Which GPIO pin is connected.
+
+### Lightweight dependencies
+
+Avoid unnecessary dependencies.
+
+The core application should remain lightweight enough to run comfortably on a Raspberry Pi.
+
+### Hardware-independent testing
+
+Use the simulator for development and testing.
+
+Physical hardware should not be required to contribute to the core application.

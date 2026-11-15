@@ -1,96 +1,129 @@
-# Architecture
+# Seasonal Lights Architecture
 
 ## Overview
 
-Seasonal Lights separates the system into several layers.
+Seasonal Lights uses a modular architecture.
+
+The application separates configuration, scene management, effects, devices, and hardware implementation.
+
+## Architecture Flow
 
 ```text
-Configuration
-     |
-     v
-Models
-     |
-     v
-Scene Engine
-     |
-     +---- Effects
-     |
-     v
-Controller Interface
-     |
-     +---- Simulator
-     |
-     +---- Raspberry Pi
-     |
-     +---- Pico W
+                  Configuration
+                        |
+                        v
+                     Models
+                        |
+                        v
+                   Scene Engine
+                        |
+                        v
+                     Effects
+                        |
+                        v
+                Lighting Controller
+                        |
+                        v
+                 Device Interface
+                        |
+             +----------+----------+
+             |                     |
+         Simulator             Hardware
+                               Adapters
+```
 
-Configuration
+## Configuration
 
-Configuration describes the deployment.
+Configuration defines:
 
-It should not contain application logic.
+- Application settings.
+- Devices.
+- Zones.
+- Scenes.
+- Brightness limits.
+- Runtime behavior.
 
-Examples:
+Configuration should not contain implementation logic.
 
-device IDs
-zone IDs
-pixel counts
-controller assignments
-scene definitions
-Models
+## Models
 
-Models represent system objects.
-
-Examples:
-
-Color
-DeviceConfig
-ZoneConfig
-SceneConfig
-Effects
-
-Effects generate pixel states.
+Models describe application objects.
 
 Examples:
 
-Solid
-Pulse
-Rainbow
+- Color
+- Device
+- Zone
+- Scene
 
-Effects should not know how pixels are physically transmitted.
+## Core
 
-Devices
+The core package coordinates the application.
 
-Devices transmit pixel states.
+It is responsible for:
 
-The LightingDevice interface defines the contract.
+- Preparing devices.
+- Loading scenes.
+- Activating effects.
+- Rendering frames.
+- Scheduling updates.
 
-A physical Pico controller can eventually implement the same interface.
+## Effects
 
-Scene Engine
+Effects generate pixel frames.
 
-The scene engine connects:
+They do not communicate with hardware.
 
-Scene
-  |
-  +-- Zone
-  |
-  +-- Effect
-  |
-  +-- Controller
+An effect should not know which controller or physical lighting system will display its output.
 
-This allows scenes to remain independent of physical hardware.
+## Devices
 
-Future Architecture
+Devices implement the common LightingDevice interface.
 
-Eventually:
+Examples:
 
-                    Scene Engine
+- Simulator.
+- Raspberry Pi local output.
+- Raspberry Pi Pico.
+- ESP32.
+
+## Zones
+
+A zone represents a logical group of lights.
+
+Examples:
+
+- Front roof.
+- Garage.
+- Porch.
+- Windows.
+- Trees.
+- Walkway.
+
+Zones reference device outputs.
+
+## Scenes
+
+Scenes define which zones participate and which effects are applied.
+
+Scenes should remain independent of hardware.
+
+## Future Distributed Architecture
+
+```text
+                   Raspberry Pi 5
                          |
-                Experience Engine
+                   Scene Engine
                          |
-          +--------------+--------------+
-          |              |              |
-        Lights         Audio        Projector
-          |              |              |
-       Pico W           Pi         HDMI/Network
+                   Network Layer
+                         |
+             +-----------+-----------+
+             |           |           |
+           Pico W      Pico W      Pico W
+             |           |           |
+           Roof        Porch      Garage
+```
+
+The Pi handles orchestration.
+
+Each microcontroller handles its own local hardware timing.

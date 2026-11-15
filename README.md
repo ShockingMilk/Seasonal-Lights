@@ -1,132 +1,178 @@
 # Seasonal Lights
 
-A modular, hardware-independent lighting control platform designed for
-seasonal lighting, events, synchronized shows, and future multimedia
-experiences.
+A modular, extensible lighting control platform designed for Raspberry Pi and distributed microcontrollers.
 
-The project is designed to grow from a single strand of addressable LEDs
-into a distributed lighting system capable of controlling multiple zones,
-controllers, projectors, and other devices.
+Seasonal Lights is intended to support more than holiday decorations. It provides a flexible system for controlling lighting installations, creating animated scenes, scheduling experiences, and eventually synchronizing lights with audio and projection.
 
-## Project Goals
+## Project Vision
 
-- Start with a single strand of lights.
-- Support multiple strands and zones.
-- Support multiple lighting controllers.
-- Keep hardware-specific code separate from the lighting engine.
-- Support different occasions and themes.
-- Minimize unnecessary power consumption.
-- Eventually support synchronized projectors and multimedia.
-- Remain suitable for Raspberry Pi and Pico-class hardware.
-- Keep deployment-specific configuration outside the source code.
+The project will grow through several stages:
 
-## Current Status
-
-POC #1.
-
-POC #1 provides:
-
-- A simulated lighting controller.
-- A virtual LED strand.
-- Configurable zones.
-- Configurable scenes.
-- Solid color effects.
-- Pulse effects.
-- Rainbow effects.
-- A hardware-independent controller interface.
-- Basic automated tests.
-
-No physical lighting hardware is required.
+1. POC #1 - Simulated single-zone lighting.
+2. POC #2 - Physical single-strand lighting.
+3. POC #3 - Multiple strands and lighting zones.
+4. POC #4 - Distributed Raspberry Pi Pico controllers.
+5. POC #5 - Whole-house lighting.
+6. Future - Audio, projector, and synchronized experiences.
 
 ## Architecture
 
+The Raspberry Pi acts as the primary application controller.
+
 ```text
-                    Seasonal Lights
-                          |
-                    Scene Engine
-                          |
-                   Effect Generator
-                          |
-                   Controller API
-                          |
-                +---------+---------+
-                |                   |
-             Simulator           Pico W
-                |                 Future
-                |
-             LED Strand
+                  Raspberry Pi 5
+                        |
+                 Seasonal Lights
+                        |
+              +---------+---------+
+              |                   |
+          Scene Engine        Scheduler
+              |
+          Zone Manager
+              |
+       Lighting Controller
+              |
+        Device Interface
+              |
+        +-----+-----+
+        |           |
+    Simulator   Hardware
+                Adapters
+```
 
-The simulator implements the same controller interface that future physical
-controllers will implement.
+The core application does not directly communicate with LED hardware.
 
-Requirements
-Python 3.11+
-pip
-Linux, macOS, or Windows
+Instead, hardware implementations use a common device interface.
 
-Raspberry Pi OS is supported.
+## POC #1 Features
 
-Installation
+- YAML configuration.
+- Device definitions.
+- Lighting zones.
+- Scene definitions.
+- RGB color support.
+- Brightness control.
+- Solid color effect.
+- Pulse effect.
+- Rainbow effect.
+- Simulated LED output.
+- Command-line scene selection.
+- Automated tests.
+
+No physical lighting hardware is required.
+
+## Requirements
+
+- Python 3.11 or newer.
+- Linux recommended.
+- Raspberry Pi OS supported.
+- Git.
+
+## Installation
 
 Clone the repository:
 
-git clone <your-repository-url>
+```bash
+git clone <repository-url>
 cd seasonal-lights
+```
 
 Create a virtual environment:
 
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
+```
 
-Install dependencies:
+Install the project:
 
-pip install -r requirements.txt
+```bash
+pip install -e ".[dev]"
+```
 
-Install the project in editable mode:
+## Configuration
 
-pip install -e .
-Running POC #1
-python -m seasonal_lights.main
+Copy the example configurations:
 
-Or:
+```bash
+cp config/config.example.yaml config/config.yaml
+cp config/devices.example.yaml config/devices.yaml
+cp config/zones.example.yaml config/zones.yaml
+```
 
-./scripts/run.sh
+Example scene files are already available in `config/scenes/`.
 
-The simulator will display the current virtual LED state in the terminal.
+The application uses the example configurations when local configuration files are absent.
 
-Configuration
+## Running
 
-Example configuration files are located in:
+Run the default scene:
 
-config/
+```bash
+seasonal-lights
+```
 
-The example files are safe to commit to GitHub.
+Select a scene:
 
-Machine-specific configuration should not be committed.
+```bash
+seasonal-lights --scene solid_warm
+```
 
-Future Development
+Run a rainbow effect for 30 seconds:
 
-Planned progression:
+```bash
+seasonal-lights --scene rainbow --duration 30
+```
 
-Single simulated strand
-Single physical strand
-Multiple strands
-Multiple zones
-Pico W controllers
-Distributed synchronization
-Whole-house lighting
-Scheduling
-Audio synchronization
-Projector synchronization
-Multimedia experiences
-Design Principle
+Run continuously:
 
-Scenes describe what should happen.
+```bash
+seasonal-lights --scene pulse --duration 0
+```
 
-Controllers describe where the lights physically exist.
+Stop with Ctrl+C.
 
-Effects describe how the lights behave.
+## Testing
 
-Hardware drivers describe how commands reach the hardware.
+Run:
 
-These concerns should remain separate.
+```bash
+pytest
+```
+
+## Development
+
+The project is designed around several principles:
+
+- Hardware-independent core.
+- Configuration-driven behavior.
+- Modular effects.
+- Reusable device interfaces.
+- Centralized enums.
+- Independent lighting zones.
+- Testable application components.
+
+## Future Hardware
+
+Potential hardware includes:
+
+- Raspberry Pi 5.
+- Raspberry Pi Pico W.
+- ESP32.
+- WS2812B LED strips.
+- SK6812 LED strips.
+- Other compatible addressable lighting systems.
+
+## Electrical Safety
+
+The project is intended to control appropriately designed low-voltage lighting systems.
+
+Never connect LED power supplies directly to Raspberry Pi GPIO pins.
+
+Use appropriate power supplies, current protection, wiring, level shifting, and enclosures.
+
+Mains-powered equipment requires suitable isolation and appropriately rated components.
+
+## License
+
+MIT License. See LICENSE.

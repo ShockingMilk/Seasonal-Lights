@@ -1,1 +1,1 @@
-"""General utility functions."""
+"""Shared utilities."""

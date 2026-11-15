@@ -1,13 +1,8 @@
 devices:
 
-  simulator_01:
-    name: Example Simulator
-    type: simulator
-    outputs: 1
+  simulator:
+    type: "simulator"
+    name: "Development Simulator"
 
-  # Future example:
-  #
-  # pico_front:
-  #   name: Front House Controller
-  #   type: pico_w
-  #   outputs: 4
+    outputs: 1
+    pixels_per_output: 30
