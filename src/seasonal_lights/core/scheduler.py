@@ -1,7 +1,8 @@
+from typing import Any
+
 from seasonal_lights.core.controller import LightingController
 from seasonal_lights.core.scene_engine import SceneEngine
 from seasonal_lights.utils.timing import monotonic_seconds, sleep
-
 
 class Scheduler:
     """Runs the active lighting scene."""
@@ -12,6 +13,7 @@ class Scheduler:
         controller: LightingController,
         zone_pixel_counts: dict[str, int],
         update_interval: float = 0.10,
+        dashboard: Any | None = None,
     ) -> None:
         if update_interval <= 0:
             raise ValueError(
@@ -22,6 +24,7 @@ class Scheduler:
         self.controller = controller
         self.zone_pixel_counts = zone_pixel_counts
         self.update_interval = update_interval
+        self.dashboard = dashboard
 
         self.running = False
 
@@ -41,6 +44,12 @@ class Scheduler:
 
         try:
             while self.running:
+                if (
+                    self.dashboard is not None
+                    and not self.dashboard.is_running
+                ):
+                    break
+
                 elapsed = monotonic_seconds() - start
 
                 if duration is not None and elapsed >= duration:
@@ -52,6 +61,10 @@ class Scheduler:
                 )
 
                 self.controller.render(frames)
+
+                if self.dashboard is not None:
+                    if not self.dashboard.update():
+                        break
 
                 sleep(self.update_interval)
 

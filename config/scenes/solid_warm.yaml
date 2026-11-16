@@ -1,7 +1,7 @@
 name: "Warm White"
 
 zones:
-  - test_zone
+  - porch
 
 effect:
   type: "solid"

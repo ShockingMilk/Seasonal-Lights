@@ -6,4 +6,5 @@ zones:
     device: "simulator"
     output: 0
 
+    pixel_start: 0
     pixel_count: 30

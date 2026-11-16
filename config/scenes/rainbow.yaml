@@ -1,7 +1,7 @@
 name: "Rainbow"
 
 zones:
-  - test_zone
+  - side_window
 
 effect:
   type: "rainbow"

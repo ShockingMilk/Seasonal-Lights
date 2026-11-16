@@ -5,6 +5,7 @@ from seasonal_lights.core.controller import LightingController
 from seasonal_lights.core.scene_engine import SceneEngine
 from seasonal_lights.core.scheduler import Scheduler
 from seasonal_lights.devices.simulator import SimulatorDevice
+from seasonal_lights.devices.visualizer import SimulationDashboard
 from seasonal_lights.effects.factory import create_effect
 from seasonal_lights.enums.device import DeviceType
 from seasonal_lights.models.device import Device
@@ -23,11 +24,14 @@ class SeasonalLightsApplication:
     ) -> None:
         self.config_dir = config_dir
 
-        self.devices = {}
-        self.zones = {}
+        self.devices: dict[str, Any] = {}
+        self.device_models: dict[str, Device] = {}
+        self.zones: dict[str, Zone] = {}
 
-        self.controller = None
-        self.scheduler = None
+        self.controller: LightingController | None = None
+        self.scheduler: Scheduler | None = None
+        self.dashboard: SimulationDashboard | None = None
+        self.scene: Scene | None = None
 
     def _load_config(
         self,
@@ -87,24 +91,21 @@ class SeasonalLightsApplication:
     def load_devices(self) -> None:
         """Load all configured devices."""
 
-        config = self._load_config(
-            "devices.yaml"
-        )
+        config = self._load_config("devices.yaml")
 
         for device_id, data in config["devices"].items():
-            _, implementation = self._create_device(
+            model, implementation = self._create_device(
                 device_id,
                 data,
             )
 
+            self.device_models[device_id] = model
             self.devices[device_id] = implementation
 
     def load_zones(self) -> None:
         """Load all configured zones."""
 
-        config = self._load_config(
-            "zones.yaml"
-        )
+        config = self._load_config("zones.yaml")
 
         for zone_id, data in config["zones"].items():
             self.zones[zone_id] = Zone(
@@ -113,6 +114,7 @@ class SeasonalLightsApplication:
                 device_id=data["device"],
                 output=int(data["output"]),
                 pixel_count=int(data["pixel_count"]),
+                pixel_start=int(data.get("pixel_start", 0)),
             )
 
     def build_scene(
@@ -120,20 +122,16 @@ class SeasonalLightsApplication:
         scene_id: str,
         config: dict[str, Any],
     ) -> tuple[Scene, dict]:
-        """Build a scene and its independent zone effects."""
+        """Build a scene with independently configured zone effects."""
 
-        scene = Scene(
-            name=config["name"],
-            zones=list(config["zones"]),
-            effect_config=dict(config["effect"]),
-        )
+        zone_ids = list(config["zones"])
 
-        effects = {
-            zone_id: create_effect(scene.effect_config)
-            for zone_id in scene.zones
-        }
+        if not zone_ids:
+            raise ValueError(
+                f"Scene '{scene_id}' must contain at least one zone."
+            )
 
-        unknown_zones = set(scene.zones) - set(self.zones)
+        unknown_zones = set(zone_ids) - set(self.zones)
 
         if unknown_zones:
             raise ValueError(
@@ -141,20 +139,56 @@ class SeasonalLightsApplication:
                 f"{unknown_zones}"
             )
 
+        default_effect = config.get("effect")
+        zone_effect_configs = config.get("effects", {})
+
+        effects = {}
+
+        for zone_id in zone_ids:
+            effect_config = zone_effect_configs.get(
+                zone_id,
+                default_effect,
+            )
+
+            if effect_config is None:
+                raise ValueError(
+                    f"Scene '{scene_id}' has no effect configured "
+                    f"for zone '{zone_id}'."
+                )
+
+            effects[zone_id] = create_effect(
+                effect_config
+            )
+
+        scene = Scene(
+            name=config["name"],
+            zones=zone_ids,
+            effect_config=dict(
+                default_effect or zone_effect_configs
+            ),
+        )
+
         return scene, effects
 
-    def prepare(self, scene_id: str) -> None:
-        """Prepare devices and the selected scene."""
+    def prepare(
+        self,
+        scene_id: str,
+        visual: bool = False,
+    ) -> None:
+        """Prepare devices, zones, scene, and optional dashboard."""
 
-        runtime = self._load_config(
-            "config.yaml"
-        )
+        runtime = self._load_config("config.yaml")
 
         scene_path = (
             self.config_dir
             / "scenes"
             / f"{scene_id}.yaml"
         )
+
+        if not scene_path.exists():
+            raise FileNotFoundError(
+                f"Scene configuration not found: {scene_path}"
+            )
 
         scene_config = load_yaml(scene_path)
 
@@ -205,15 +239,33 @@ class SeasonalLightsApplication:
             )
         )
 
+        if visual:
+            simulator_devices = {
+                device_id: device
+                for device_id, device in self.devices.items()
+                if isinstance(device, SimulatorDevice)
+            }
+
+            if not simulator_devices:
+                raise RuntimeError(
+                    "No simulator devices are configured."
+                )
+
+            self.dashboard = SimulationDashboard(
+                devices=simulator_devices,
+                zones=self.zones,
+            )
+
+        for device in self.devices.values():
+            device.initialize()
+
         self.scheduler = Scheduler(
             engine=engine,
             controller=self.controller,
             zone_pixel_counts=zone_pixel_counts,
             update_interval=interval,
+            dashboard=self.dashboard,
         )
-
-        for device in self.devices.values():
-            device.initialize()
 
         self.scene = scene
 
@@ -242,3 +294,7 @@ class SeasonalLightsApplication:
         finally:
             for device in self.devices.values():
                 device.shutdown()
+
+            if self.dashboard is not None:
+                self.dashboard.close()
+                self.dashboard = None

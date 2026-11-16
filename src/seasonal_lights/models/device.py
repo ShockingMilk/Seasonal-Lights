@@ -21,3 +21,8 @@ class Device:
             raise ValueError(
                 "A device must support at least one pixel per output."
             )
+
+    @property
+    def total_pixel_capacity(self) -> int:
+        """Return the total configured pixel capacity."""
+        return self.outputs * self.pixels_per_output

@@ -1,9 +1,8 @@
-from seasonal_lights.devices.base import LightingDevice
 from seasonal_lights.models.color import Color
-
+from seasonal_lights.devices.base import LightingDevice
 
 class SimulatorDevice(LightingDevice):
-    """Simulates an addressable LED controller."""
+    """In-memory simulation of an addressable LED controller."""
 
     def __init__(
         self,
@@ -11,10 +10,11 @@ class SimulatorDevice(LightingDevice):
         outputs: int,
         pixels_per_output: int,
     ) -> None:
-        if outputs < 1 or pixels_per_output < 1:
-            raise ValueError(
-                "Outputs and pixel count must be positive."
-            )
+        if outputs < 1:
+            raise ValueError("Outputs must be positive.")
+
+        if pixels_per_output < 1:
+            raise ValueError("Pixel count must be positive.")
 
         self.name = name
         self.outputs = outputs
@@ -31,10 +31,13 @@ class SimulatorDevice(LightingDevice):
         self.initialized = False
 
     def initialize(self) -> None:
+        """Initialize the simulated device."""
         self.initialized = True
 
         print(
-            f"[SIMULATOR] Initialized: {self.name}"
+            f"[SIMULATOR] Initialized: {self.name} "
+            f"({self.outputs} outputs, "
+            f"{self.pixels_per_output} pixels per output)"
         )
 
     def set_pixels(
@@ -42,6 +45,8 @@ class SimulatorDevice(LightingDevice):
         output: int,
         pixels: list[Color],
     ) -> None:
+        """Replace the complete pixel frame for one output."""
+
         self._validate_output(output)
 
         if not self.initialized:
@@ -57,9 +62,9 @@ class SimulatorDevice(LightingDevice):
 
         self.pixels[output] = list(pixels)
 
-        self._display(output)
-
     def clear(self, output: int) -> None:
+        """Clear one output."""
+
         self._validate_output(output)
 
         self.pixels[output] = [
@@ -67,44 +72,18 @@ class SimulatorDevice(LightingDevice):
             for _ in range(self.pixels_per_output)
         ]
 
-        self._display(output)
-
     def shutdown(self) -> None:
+        """Clear all outputs and shut down the simulator."""
+
         for output in self.pixels:
             self.clear(output)
 
         self.initialized = False
 
-        print("[SIMULATOR] Shutdown.")
+        print(f"[SIMULATOR] Shutdown: {self.name}")
 
     def _validate_output(self, output: int) -> None:
         if output not in self.pixels:
             raise ValueError(
                 f"Invalid simulator output: {output}"
             )
-
-    def _display(self, output: int) -> None:
-        pixels = self.pixels[output]
-
-        average = self._average_color(pixels)
-
-        print(
-            f"[SIMULATOR] Output {output} | "
-            f"Pixels: {len(pixels)} | "
-            f"Average RGB: {average.as_tuple()}"
-        )
-
-    @staticmethod
-    def _average_color(
-        pixels: list[Color],
-    ) -> Color:
-        if not pixels:
-            return Color.black()
-
-        count = len(pixels)
-
-        return Color(
-            red=sum(pixel.red for pixel in pixels) // count,
-            green=sum(pixel.green for pixel in pixels) // count,
-            blue=sum(pixel.blue for pixel in pixels) // count,
-        )

@@ -3,6 +3,7 @@ from pathlib import Path
 from seasonal_lights import __version__
 from seasonal_lights.cli.commands import create_parser
 from seasonal_lights.core.application import SeasonalLightsApplication
+from seasonal_lights.utils.config import load_yaml
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -21,16 +22,10 @@ def main() -> None:
         else DEFAULT_CONFIG_DIR
     )
 
-    application = SeasonalLightsApplication(
-        config_dir=config_dir,
-    )
-
     config_path = config_dir / "config.yaml"
 
     if not config_path.exists():
         config_path = config_dir / "config.example.yaml"
-
-    from seasonal_lights.utils.config import load_yaml
 
     runtime = load_yaml(config_path)
 
@@ -48,14 +43,21 @@ def main() -> None:
         else args.duration
     )
 
+    if args.interval is not None and args.interval <= 0:
+        parser.error("--interval must be greater than zero.")
+
     print(f"Seasonal Lights v{__version__}")
 
-    application.prepare(scene_id)
+    application = SeasonalLightsApplication(
+        config_dir=config_dir,
+    )
+
+    application.prepare(
+        scene_id=scene_id,
+        visual=args.visual,
+    )
 
     if args.interval is not None:
-        if args.interval <= 0:
-            parser.error("--interval must be greater than zero.")
-
         application.scheduler.update_interval = args.interval
 
     application.run(duration)

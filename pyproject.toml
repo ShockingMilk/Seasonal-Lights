@@ -19,6 +19,10 @@ dev = [
     "pytest>=8.0"
 ]
 
+visual = [
+    "pygame>=2.5"
+]
+
 [project.scripts]
 seasonal-lights = "seasonal_lights.main:main"
 

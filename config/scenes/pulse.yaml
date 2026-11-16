@@ -1,7 +1,7 @@
 name: "Warm Pulse"
 
 zones:
-  - test_zone
+  - porch
 
 effect:
   type: "pulse"

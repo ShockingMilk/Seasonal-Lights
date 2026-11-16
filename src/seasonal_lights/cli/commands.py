@@ -36,4 +36,10 @@ def create_parser() -> argparse.ArgumentParser:
         help="Path to the configuration directory.",
     )
 
+    parser.add_argument(
+        "--visual",
+        action="store_true",
+        help="Open the graphical lighting simulator.",
+    )
+
     return parser
